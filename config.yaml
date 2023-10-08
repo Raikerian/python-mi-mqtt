@@ -1,0 +1,6 @@
+devices:
+  - ip: "<mi_device_local_ip>"
+    token: "<mi_device_token>"
+    room: "bedroom"
+
+# Add more devices as needed

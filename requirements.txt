@@ -1,0 +1,4 @@
+cryptography==35.0.0
+python-miio==0.5.12
+paho-mqtt==1.6.1
+PyYAML==6.0.1
