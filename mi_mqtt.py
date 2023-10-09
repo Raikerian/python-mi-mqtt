@@ -19,8 +19,10 @@ with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
 # MQTT details
-BROKER = os.environ.get('MQTT_BROKER', "localhost")
-PORT = 1883
+BROKER = config['mqtt']['broker']
+PORT = config['mqtt']['port']
+CLIENT_NAME = config['mqtt']['client_name']
+POLL_INTERVAL = config.get('poll_interval', 60)  # Use a default value if not provided
 mqtt_client_instance = None
 
 def on_connect(client, userdata, flags, rc):
@@ -31,7 +33,7 @@ def on_connect(client, userdata, flags, rc):
 
 def connect_to_mqtt():
     global mqtt_client_instance
-    mqtt_client_instance = mqtt_client.Client("XiaomiPublisher")
+    mqtt_client_instance = mqtt_client.Client(CLIENT_NAME)
     mqtt_client_instance.on_connect = on_connect
     mqtt_client_instance.connect(BROKER, PORT)
     mqtt_client_instance.loop_start()
@@ -46,37 +48,43 @@ def publish_to_mqtt(room, device, metric, value):
 
 def fetch_data_airpurifier(device_config):
     XIAOMI_IP = device_config['ip']
-    XIAOMI_TOKEN = device_config['token']
-    ROOM_NAME = device_config['room']
+    air_purifier = miio.AirPurifier(XIAOMI_IP, device_config['token'])
+    logger.info(f"Connecting to Xiaomi Air Purifier at {XIAOMI_IP}")
+    status = air_purifier.status()
+    return {
+        "temperature": status.temperature,
+        "humidity": status.humidity,
+        "aqi": status.aqi
+    }
 
-    # Connect to Xiaomi device
-    try:
-        air_purifier = miio.AirPurifier(XIAOMI_IP, XIAOMI_TOKEN)
-        logger.info(f"Connected to Xiaomi device at {XIAOMI_IP}")
+DEVICE_TYPE_MAP = {
+    "airpurifier": fetch_data_airpurifier,
+    # Add more device types to the map as needed
+}
 
-        while True:
-            # Fetch data
-            status = air_purifier.status()
-            data = {
-                "temperature": status.temperature,
-                "humidity": status.humidity,
-                "aqi": status.aqi,
-            }
+def fetch_and_publish(device_config):
+    device_type = device_config['type']
+    fetch_func = DEVICE_TYPE_MAP.get(device_type)
+    if not fetch_func:
+        logger.error(f"Unsupported device type: {device_type}")
+        return
 
-            # Publish data to MQTT
+    while True:
+        try:
+            data = fetch_func(device_config)
+            room_name = device_config['room']
             for metric, value in data.items():
-                publish_to_mqtt(ROOM_NAME, "airpurifier", metric, str(value))
-
-            # Sleep for a specified interval (e.g., 60 seconds) before fetching data again
-            time.sleep(60)
-    except Exception as e:
-        logger.error(f"Error fetching data from Xiaomi device: {e}")
+                publish_to_mqtt(room_name, device_type, metric, str(value))
+        except Exception as e:
+            logger.error(f"Error fetching data from {device_type} device: {e}")
+        # Sleep for the specified interval before fetching data again
+        time.sleep(POLL_INTERVAL)
 
 def main():
     connect_to_mqtt()
     threads = []
     for device_config in config['devices']:
-        t = threading.Thread(target=fetch_data_airpurifier, args=(device_config,))
+        t = threading.Thread(target=fetch_and_publish, args=(device_config,))
         t.start()
         threads.append(t)
 

@@ -1,6 +1,13 @@
+mqtt:
+  broker: "localhost"
+  port: 1883
+  client_name: "XiaomiPublisher"
+
+poll_interval: 60  # time in seconds
+
 devices:
   - ip: "<mi_device_local_ip>"
     token: "<mi_device_token>"
+    type: "airpurifier"
     room: "bedroom"
-
 # Add more devices as needed
