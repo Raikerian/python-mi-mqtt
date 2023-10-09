@@ -2,9 +2,6 @@
 IMAGE_NAME := mi_mqtt_publisher
 MQTT_BROKER_IMAGE := eclipse-mosquitto
 
-# Default broker address
-BROKER ?= host.docker.internal
-
 # Path to the config.yaml on the host system
 CONFIG_PATH ?= ./config.yaml
 
@@ -27,7 +24,6 @@ run:
 	@echo "Running Docker container..."
 	docker run -d \
 	--add-host host.docker.internal:host-gateway \
-	-e MQTT_BROKER=$(BROKER) \
 	--name $(IMAGE_NAME) \
 	--restart unless-stopped \
 	-v $(CONFIG_PATH):/app/config.yaml \
