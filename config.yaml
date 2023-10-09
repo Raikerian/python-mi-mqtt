@@ -1,5 +1,5 @@
 mqtt:
-  broker: "localhost"
+  broker: "host.docker.internal"
   port: 1883
   client_name: "XiaomiPublisher"
 
