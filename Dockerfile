@@ -10,6 +10,7 @@ RUN apt-get update \
         libffi-dev \
         python3-dev \
         cargo \
+        git \
       && apt-get clean
 
 # Copy the requirements file to the container

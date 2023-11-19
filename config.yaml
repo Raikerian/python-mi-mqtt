@@ -10,4 +10,8 @@ devices:
     token: "<mi_device_token>"
     type: "airpurifier"
     room: "bedroom"
+  - ip: "<mi_device_local_ip>"
+    token: "<mi_device_token>"
+    type: "airpurifiermiot"
+    room: "livingroom"
 # Add more devices as needed

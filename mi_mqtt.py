@@ -57,8 +57,20 @@ def fetch_data_airpurifier(device_config):
         "aqi": status.aqi
     }
 
+def fetch_data_airpurifier_miot(device_config):
+    XIAOMI_IP = device_config['ip']
+    air_purifier = miio.AirPurifierMiot(XIAOMI_IP, device_config['token'])
+    logger.info(f"Connecting to Xiaomi Air Purifier MIOT at {XIAOMI_IP}")
+    status = air_purifier.status()
+    return {
+        "temperature": status.temperature,
+        "humidity": status.humidity,
+        "aqi": status.aqi
+    }
+
 DEVICE_TYPE_MAP = {
     "airpurifier": fetch_data_airpurifier,
+    "airpurifiermiot": fetch_data_airpurifier_miot,
     # Add more device types to the map as needed
 }
 
